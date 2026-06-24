@@ -1,0 +1,15 @@
+{
+  "editableParameters": [
+    {"name": "showAnchorages",  "type": "BOOLEAN", "default": "true",  "description": "Show anchorages & mooring buoys"},
+    {"name": "showMarinas",     "type": "BOOLEAN", "default": "true",  "description": "Show marinas & harbours"},
+    {"name": "showFuel",        "type": "BOOLEAN", "default": "true",  "description": "Show fuel & gas stations"},
+    {"name": "showServices",    "type": "BOOLEAN", "default": "true",  "description": "Show dinghy docks, water, boat yards, laundry, showers"},
+    {"name": "showWarnings",    "type": "BOOLEAN", "default": "true",  "description": "Show nav warnings & info markers"},
+    {"name": "showNFLAreas",    "type": "BOOLEAN", "default": "true",  "description": "Show NoForeignLand sailing guide areas"},
+    {"name": "showNFLCommunity","type": "BOOLEAN", "default": "true",  "description": "Show NoForeignLand community markers"},
+    {"name": "showTideStations","type": "BOOLEAN", "default": "true",  "description": "Show tide stations"},
+    {"name": "mapboxToken",     "type": "STRING",  "default": "",      "description": "Mapbox token for guide areas (from noforeignland.com/map DevTools → Network → pbf)"},
+    {"name": "cacheTTL",        "type": "NUMBER",  "default": "120",   "description": "Cache lifetime in minutes for community markers"},
+    {"name": "downloadRadius",  "type": "NUMBER",  "default": "20",    "description": "Download radius (km) for offline POIs + photos — 0 to disable"}
+  ]
+}

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <circle cx="16" cy="16" r="15" fill="#5a5a5a" stroke="#333" stroke-width="1.5"/>
+  <g fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Simple bollard/pier symbol -->
+    <!-- Two bollards -->
+    <rect x="10" y="14" width="4" height="8" rx="2" ry="2"/>
+    <rect x="18" y="14" width="4" height="8" rx="2" ry="2"/>
+    <!-- Rope line -->
+    <path d="M12,14 Q16,10 20,14"/>
+    <!-- Water line -->
+    <line x1="9" y1="25" x2="23" y2="25"/>
+  </g>
+</svg>

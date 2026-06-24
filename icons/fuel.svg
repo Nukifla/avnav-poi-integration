@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <circle cx="16" cy="16" r="15" fill="#d06010" stroke="#903000" stroke-width="1.5"/>
+  <g fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Fuel pump body -->
+    <rect x="10" y="11" width="10" height="13" rx="1.5" ry="1.5" stroke="#ffffff" stroke-width="1.8"/>
+    <!-- Pump nozzle arm -->
+    <path d="M20,14 L23,12 L23,17"/>
+    <!-- Label lines -->
+    <line x1="12" y1="14" x2="18" y2="14"/>
+    <line x1="12" y1="17" x2="18" y2="17"/>
+  </g>
+</svg>

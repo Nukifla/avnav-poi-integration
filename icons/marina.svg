@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <circle cx="16" cy="16" r="15" fill="#1a8a3a" stroke="#0d5a25" stroke-width="1.5"/>
+  <!-- Outer ring -->
+  <circle cx="16" cy="16" r="11" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+  <g fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Anchor ring -->
+    <circle cx="16" cy="11" r="2.5"/>
+    <!-- Vertical shaft -->
+    <line x1="16" y1="13.5" x2="16" y2="23"/>
+    <!-- Crossbar -->
+    <line x1="12" y1="16.5" x2="20" y2="16.5"/>
+    <!-- Flukes -->
+    <path d="M10,23 Q10,25.5 12.5,25.5 L16,23"/>
+    <path d="M22,23 Q22,25.5 19.5,25.5 L16,23"/>
+  </g>
+</svg>

@@ -1,0 +1,290 @@
+/* Navily nautical POI overlay — modal popup styles */
+
+/* Semi-transparent backdrop — tap outside card to close */
+.poi-backdrop {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 9999999;
+    display: flex;
+    align-items: flex-end;   /* card slides up from bottom */
+    justify-content: center;
+    padding: 0 3vw 3vh;
+    box-sizing: border-box;
+}
+
+/* The card itself — nearly full screen with visible margin */
+.poi-card {
+    width: 100%;
+    max-width: 620px;
+    max-height: 92vh;
+    background: #fff;
+    border-radius: 16px 16px 12px 12px;
+    box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Sticky header */
+.poi-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px 12px;
+    background: #1a6bb0;
+    color: #fff;
+    flex-shrink: 0;
+    border-radius: 16px 16px 0 0;
+}
+
+.poi-title {
+    flex: 1;
+    font-size: 17px;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.poi-close {
+    background: rgba(255,255,255,0.25);
+    border: none;
+    color: #fff;
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    font-size: 17px;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+/* Scrollable body */
+.poi-body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 14px 16px 24px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #222;
+}
+
+/* Loading placeholder */
+.poi-loading {
+    text-align: center;
+    padding: 28px 0;
+    color: #888;
+    font-size: 15px;
+}
+
+/* Type badge */
+.poi-label {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: #3a6ea8;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+/* Star rating */
+.poi-stars {
+    color: #c8a000;
+    font-size: 19px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.poi-stars-sm {
+    font-size: 14px;
+    margin-bottom: 0;
+    margin-right: 6px;
+    display: inline;
+}
+
+.poi-stars-num {
+    font-size: 13px;
+    color: #888;
+    letter-spacing: 0;
+    font-weight: normal;
+}
+
+/* Photo gallery — all images, horizontally scrollable */
+.poi-gallery {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 8px -16px 12px;
+    padding: 0 16px;
+    scrollbar-width: none;
+}
+.poi-gallery::-webkit-scrollbar { display: none; }
+
+.poi-gallery-img {
+    flex-shrink: 0;
+    height: 150px;
+    width: auto;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+}
+
+/* Description text (raw HTML from NFL) */
+.poi-desc {
+    color: #333;
+    font-size: 14px;
+    margin: 0 0 12px;
+    line-height: 1.55;
+}
+.poi-desc p { margin: 0 0 6px; }
+.poi-desc h3 { margin: 0 0 4px; font-size: 14px; }
+
+/* Wind + facilities row */
+.poi-env {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin: 0 0 12px;
+}
+
+.poi-wind-block {
+    flex-shrink: 0;
+}
+
+.poi-fac-block {
+    flex: 1;
+    min-width: 0;
+}
+
+.poi-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #666;
+    margin-bottom: 6px;
+}
+
+/* Wind compass rose SVG */
+.poi-windrose {
+    width: 80px;
+    height: 80px;
+    display: block;
+}
+
+/* Facility chips */
+.poi-facilities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.poi-fac-chip {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 10px;
+    background: #e8f0fb;
+    color: #1a5a9a;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Key facts grid */
+.poi-meta {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 5px 12px;
+    background: #f4f6fa;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin: 0 0 12px;
+    font-size: 13px;
+}
+
+.poi-meta-key {
+    font-weight: 600;
+    color: #555;
+}
+
+/* Reviews section */
+.poi-reviews {
+    margin: 0 0 12px;
+}
+
+.poi-review {
+    border-top: 1px solid #ebebeb;
+    padding: 8px 0 4px;
+}
+
+.poi-review-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 3px;
+    font-size: 13px;
+    gap: 4px;
+}
+
+.poi-review-date {
+    color: #999;
+    font-size: 12px;
+    margin-left: auto;
+}
+
+.poi-review-text {
+    font-size: 13px;
+    color: #444;
+    line-height: 1.45;
+}
+.poi-review-text p { margin: 0 0 4px; }
+
+.poi-more {
+    font-size: 12px;
+    color: #888;
+    text-align: center;
+    margin-top: 6px;
+}
+
+/* External links */
+.poi-links {
+    margin: 0 0 12px;
+}
+
+.poi-link {
+    display: block;
+    color: #1a6bb0;
+    font-size: 13px;
+    text-decoration: underline;
+    margin-top: 4px;
+    word-break: break-all;
+}
+
+/* Meta grid — allow HTML in value cells (tel/email links) */
+.poi-meta a {
+    color: #1a6bb0;
+}
+
+/* CTA button */
+.poi-btn {
+    display: block;
+    margin-top: 14px;
+    padding: 13px 16px;
+    background: #1a6bb0;
+    color: #fff;
+    text-align: center;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
