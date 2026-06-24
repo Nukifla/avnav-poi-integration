@@ -64,8 +64,6 @@
         'WARNING':               'communityWarning',
         'QUESTION':              'communityQuestion',
         'CREW_AVAILABLE':        'communityCrew',
-        // Guide areas
-        'guide_area':            'book',
     };
 
     // Fallback icons (our own SVGs) for types without an NFL CDN icon

@@ -33,10 +33,8 @@ Available on the AvNav server status page under the plugin entry:
 | `showFuel` | Fuel & gas stations | true |
 | `showServices` | Dinghy docks, water, boat yards, showers, laundry | true |
 | `showWarnings` | Nav warnings & info markers | true |
-| `showNFLAreas` | NFL guide area polygons (requires `mapboxToken`) | true |
 | `showNFLCommunity` | NFL community markers (events/warnings/questions/crew) | true |
 | `showTideStations` | Tide stations | true |
-| `mapboxToken` | Mapbox token for guide-area polygons — get from `noforeignland.com/map` in browser DevTools → Network → filter `pbf` → copy `access_token=` value | (empty) |
 | `cacheTTL` | Cache lifetime in minutes for community markers | 120 |
 | `downloadRadius` | Radius (km) around GPS position to pre-download place details and photos for offline use (0 = disabled) | 20 |
 
@@ -47,7 +45,6 @@ Available on the AvNav server status page under the plugin entry:
 | NFL places | `/api/v1/places` | None (AES-128-ECB) |
 | NFL place detail | `/api/v1/place?placeId=ID` | None (AES-128-ECB) |
 | NFL community markers | `/api/v1/community/markers` | None (AES-128-ECB) |
-| NFL guide areas | Mapbox Vector Tiles `steve-neal.guides-areas` zoom 6 | Mapbox token |
 | NFL tide stations | `/api/v1/tidestations` | None (plain JSON) |
 
 The AES-128-ECB key is extracted from NFL's public web bundle — no account or API key needed.

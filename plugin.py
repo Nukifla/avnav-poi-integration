@@ -12,10 +12,8 @@ import hashlib
 import json
 import math
 import os
-import struct
 import threading
 import time
-import zlib
 
 import requests
 
@@ -25,8 +23,6 @@ NFL_COMMUNITY_URL      = NFL_BASE + '/community/markers'
 NFL_COMMUNITY_POST_URL = NFL_BASE + '/community/post'
 NFL_TIDES_URL          = NFL_BASE + '/tidestations'
 NFL_PLACE_URL          = NFL_BASE + '/place'
-NFL_TILE_ZOOM     = 6
-NFL_TILESET       = 'steve-neal.guides-areas'
 NFL_PLACES_TTL    = 86400   # 24 h
 NFL_TIDES_TTL     = 86400   # 24 h
 # AES-128-ECB key from NFL's client-side JS bundle (EC constant in index-*.js)
@@ -141,7 +137,6 @@ _NFL_CDN_ICON = {
     'QUESTION':              'communityQuestion',
     'CREW_AVAILABLE':        'communityCrew',
     # Guide areas
-    'guide_area':            'book',
 }
 
 def _cdn_sym(dtype):
@@ -211,123 +206,8 @@ def _bbox_to_tiles(west, south, east, north, z):
 
 
 # ---------------------------------------------------------------------------
-# Minimal PBF / Mapbox Vector Tile decoder  (stdlib only)
+# NFL API helpers
 # ---------------------------------------------------------------------------
-
-def _varint(data, pos):
-    result = shift = 0
-    while True:
-        b = data[pos]; pos += 1
-        result |= (b & 0x7F) << shift
-        if not (b & 0x80):
-            return result, pos
-        shift += 7
-
-def _iter_pbf(data):
-    pos = 0
-    while pos < len(data):
-        tag, pos = _varint(data, pos)
-        f, w = tag >> 3, tag & 7
-        if w == 0:
-            v, pos = _varint(data, pos);  yield f, w, v
-        elif w == 2:
-            l, pos = _varint(data, pos);  yield f, w, data[pos:pos + l];  pos += l
-        elif w == 5:
-            yield f, w, data[pos:pos + 4]; pos += 4
-        elif w == 1:
-            yield f, w, data[pos:pos + 8]; pos += 8
-        else:
-            break
-
-def _decode_value(vb):
-    for f, w, v in _iter_pbf(vb):
-        if f == 1 and w == 2:  return v.decode('utf-8', 'replace')
-        if f == 2 and w == 5:  return struct.unpack('<f', v)[0]
-        if f == 3 and w == 1:  return struct.unpack('<d', v)[0]
-        if f == 4 and w == 0:  return v
-        if f == 5 and w == 0:  return v
-        if f == 6 and w == 0:  return (v >> 1) ^ -(v & 1)
-        if f == 7 and w == 0:  return bool(v)
-    return None
-
-def _decode_geom(geom_raw, gtype, extent, tx, ty, z):
-    cmds = []
-    pos = 0
-    while pos < len(geom_raw):
-        v, pos = _varint(geom_raw, pos); cmds.append(v)
-    n = 1 << z
-    cx = cy = 0
-    rings = []
-    cur_ring = []
-    i = 0
-    while i < len(cmds):
-        ci = cmds[i]; i += 1
-        cmd = ci & 7; cnt = ci >> 3
-        for _ in range(cnt):
-            if cmd in (1, 2):
-                dx = (cmds[i] >> 1) ^ -(cmds[i] & 1)
-                dy = (cmds[i+1] >> 1) ^ -(cmds[i+1] & 1)
-                i += 2; cx += dx; cy += dy
-                lon = (tx + cx / extent) / n * 360.0 - 180.0
-                lat = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * (ty + cy / extent) / n))))
-                if cmd == 1 and cur_ring:
-                    rings.append(cur_ring); cur_ring = []
-                cur_ring.append([round(lon, 6), round(lat, 6)])
-            elif cmd == 7:
-                if cur_ring:
-                    rings.append(cur_ring); cur_ring = []
-    if cur_ring:
-        rings.append(cur_ring)
-    if gtype == 1:
-        return {'type': 'Point', 'coordinates': rings[0][0] if rings else [0, 0]}
-    if gtype == 2:
-        return {'type': 'LineString', 'coordinates': rings[0] if rings else []}
-    if gtype == 3:
-        return {'type': 'Polygon', 'coordinates': rings}
-    return None
-
-def _decode_mvt_layer(layer_bytes, tx, ty, z):
-    name = None; keys = []; vals = []; feats_raw = []; extent = 4096
-    for f, w, v in _iter_pbf(layer_bytes):
-        if f == 1 and w == 2:   name = v.decode('utf-8', 'replace')
-        elif f == 2 and w == 2: feats_raw.append(v)
-        elif f == 3 and w == 2: keys.append(v.decode('utf-8', 'replace'))
-        elif f == 4 and w == 2: vals.append(_decode_value(v))
-        elif f == 5 and w == 0: extent = v
-    features = []
-    for fb in feats_raw:
-        tags_raw = geom_raw = None; gtype = 1
-        for ff, fw, fv in _iter_pbf(fb):
-            if ff == 2 and fw == 2: tags_raw = fv
-            elif ff == 3 and fw == 0: gtype = fv
-            elif ff == 4 and fw == 2: geom_raw = fv
-        props = {}
-        if tags_raw:
-            tl = []; pos = 0
-            while pos < len(tags_raw):
-                v, pos = _varint(tags_raw, pos); tl.append(v)
-            for j in range(0, len(tl) - 1, 2):
-                ki, vi = tl[j], tl[j + 1]
-                if ki < len(keys) and vi < len(vals):
-                    props[keys[ki]] = vals[vi]
-        geom = _decode_geom(geom_raw or b'', gtype, extent, tx, ty, z)
-        if geom:
-            features.append({'type': 'Feature', 'geometry': geom, 'properties': props})
-    return name, features
-
-def _mvt_to_features(raw, tx, ty, z, layer_filter=None):
-    try:
-        data = zlib.decompress(raw, 47)
-    except Exception:
-        data = raw
-    result = []
-    for f, w, v in _iter_pbf(data):
-        if f == 3 and w == 2:
-            name, feats = _decode_mvt_layer(v, tx, ty, z)
-            if layer_filter is None or name in layer_filter:
-                result.extend(feats)
-    return result
-
 
 # ---------------------------------------------------------------------------
 # NFL API helpers
@@ -372,36 +252,6 @@ def _fetch_nfl_places():
     [id, name, internal_type, lat, lon, display_type] arrays."""
     data = _nfl_get(NFL_PLACES_URL, params={'zoom': 10})
     return data.get('places', [])
-
-
-# ---------------------------------------------------------------------------
-# NFL guide-area polygon fetcher  (Mapbox Vector Tiles, optional token)
-# ---------------------------------------------------------------------------
-
-def _fetch_nfl_areas(west, south, east, north, token):
-    tiles = _bbox_to_tiles(west, south, east, north, NFL_TILE_ZOOM)
-    features = []
-    for tx, ty in tiles:
-        url = (f'https://api.mapbox.com/v4/{NFL_TILESET}'
-               f'/{NFL_TILE_ZOOM}/{tx}/{ty}.vector.pbf'
-               f'?access_token={token}')
-        try:
-            r = requests.get(url, timeout=15, headers={'User-Agent': 'Mozilla/5.0'})
-            if r.status_code == 200:
-                feats = _mvt_to_features(r.content, tx, ty, NFL_TILE_ZOOM,
-                                         layer_filter={NFL_TILESET})
-                for feat in feats:
-                    p = feat.get('properties', {})
-                    feat['properties'] = {
-                        'name':   (p.get('area-slug') or p.get('name') or 'Unknown').replace('-', ' ').title(),
-                        'type':   'guide_area',
-                        'url':    p.get('url', ''),
-                        'source': 'NoForeignLand',
-                    }
-                features.extend(feats)
-        except Exception:
-            pass
-    return features
 
 
 # ---------------------------------------------------------------------------
@@ -466,10 +316,8 @@ class Plugin:
         {'name': 'showFuel',        'description': 'Show fuel & gas stations',                 'type': 'BOOLEAN', 'default': 'true'},
         {'name': 'showServices',    'description': 'Show dinghy docks, water, boat yards, laundry, showers', 'type': 'BOOLEAN', 'default': 'true'},
         {'name': 'showWarnings',    'description': 'Show nav warnings & info markers',         'type': 'BOOLEAN', 'default': 'true'},
-        {'name': 'showNFLAreas',    'description': 'Show NoForeignLand sailing guide areas',   'type': 'BOOLEAN', 'default': 'true'},
         {'name': 'showNFLCommunity','description': 'Show NoForeignLand community markers',      'type': 'BOOLEAN', 'default': 'true'},
         {'name': 'showTideStations','description': 'Show tide stations',                        'type': 'BOOLEAN', 'default': 'true'},
-        {'name': 'mapboxToken',     'description': 'Mapbox token for guide areas (from noforeignland.com/map DevTools→Network→pbf)', 'type': 'STRING', 'default': ''},
         {'name': 'cacheTTL',        'description': 'Cache duration in minutes (for community markers)', 'type': 'NUMBER', 'default': '120'},
         {'name': 'downloadRadius',  'description': 'Radius (km) to download place details + all photos for offline use (0 = disabled)', 'type': 'NUMBER', 'default': '20'},
     ]
@@ -489,8 +337,6 @@ class Plugin:
         self._nfl_places = []       # [[id, name, itype, lat, lon, dtype], ...]
         self._nfl_places_ts = 0.0
         # Guide-area polygons (Mapbox tiles, optional)
-        self._nfl_areas = []
-        self._nfl_ts = 0.0
         # Community markers
         self._nfl_community = []
         self._nfl_community_ts = 0.0
@@ -676,7 +522,6 @@ class Plugin:
                 return {
                     'status':        'OK',
                     'nfl_places':    len(self._nfl_places),
-                    'nfl_areas':     len(self._nfl_areas),
                     'nfl_community': len(self._nfl_community),
                     'tide_stations': len(self._tidestations),
                 }
@@ -1036,8 +881,6 @@ class Plugin:
                 })
 
             # Guide-area polygons (viewport-based — tile data, not per-POI download)
-            if self._bool('showNFLAreas'):
-                features.extend(self._nfl_areas)
 
             # Community markers — radius-filtered when GPS available, else all
             if self._bool('showNFLCommunity'):
@@ -1124,19 +967,6 @@ class Plugin:
                 except Exception as ex:
                     self.api.error('NFL community fetch failed: %s', str(ex))
 
-        # Guide-area polygons — TTL from config
-        if self._bool('showNFLAreas') and not self._stopped:
-            token = (self.api.getConfigValue('mapboxToken', '') or '').strip()
-            ttl = self._int('cacheTTL', 120) * 60
-            if token and now - self._nfl_ts > ttl:
-                try:
-                    west, south, east, north = self._last_bbox
-                    areas = _fetch_nfl_areas(west, south, east, north, token)
-                    with self._lock:
-                        self._nfl_areas = areas
-                        self._nfl_ts = time.time()
-                except Exception as ex:
-                    self.api.error('NFL area fetch failed: %s', str(ex))
 
         # Tide stations — 24h cache
         if self._bool('showTideStations') and not self._stopped:
