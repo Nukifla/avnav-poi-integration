@@ -1,6 +1,6 @@
 # avnav-poi-integration
 
-AvNav plugin that overlays NoForeignLand POIs (anchorages, marinas, fuel, community markers, tide stations) and optional guide-area polygons on the chart.
+AvNav plugin that overlays NoForeignLand POIs (anchorages, marinas, fuel, community markers, tide stations) on the chart.
 
 ## Installation
 
