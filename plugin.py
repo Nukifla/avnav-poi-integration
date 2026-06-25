@@ -320,6 +320,7 @@ class Plugin:
         {'name': 'showTideStations','description': 'Show tide stations',                        'type': 'BOOLEAN', 'default': 'true'},
         {'name': 'cacheTTL',        'description': 'Cache duration in minutes (for community markers)', 'type': 'NUMBER', 'default': '120'},
         {'name': 'downloadRadius',  'description': 'Radius (km) to download place details + all photos for offline use (0 = disabled)', 'type': 'NUMBER', 'default': '20'},
+        {'name': 'storageLimitMB',  'description': 'Max storage for downloaded place details and photos in MB (0 = unlimited). When full, oldest files are deleted first.', 'type': 'NUMBER', 'default': '500'},
     ]
 
     @classmethod
@@ -757,6 +758,53 @@ class Plugin:
 
         self.api.setStatus('RUNNING',
             f'avnav-poi: {total} POIs downloaded, {imgs} new images ({radius_km:.0f} km)')
+        self._enforce_storage_cap()
+
+    def _enforce_storage_cap(self):
+        """Delete oldest cache files until total size is under storageLimitMB."""
+        try:
+            limit_mb = float(self.api.getConfigValue('storageLimitMB', '500') or 0)
+        except Exception:
+            limit_mb = 500.0
+        limit_bytes = int(limit_mb * 1024 * 1024)
+        if limit_bytes <= 0:
+            return
+
+        files = []
+        for d in (self._place_detail_dir, self._image_dir):
+            try:
+                for fname in os.listdir(d):
+                    path = os.path.join(d, fname)
+                    try:
+                        st = os.stat(path)
+                        files.append((st.st_mtime, st.st_size, path))
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+
+        total = sum(f[1] for f in files)
+        if total <= limit_bytes:
+            return
+
+        files.sort(key=lambda x: x[0])  # oldest first
+        removed = 0
+        freed = 0
+        for mtime, size, path in files:
+            if total <= limit_bytes:
+                break
+            try:
+                os.remove(path)
+                total -= size
+                freed += size
+                removed += 1
+            except Exception:
+                pass
+
+        if removed:
+            freed_mb = freed / (1024 * 1024)
+            self.api.setStatus('RUNNING',
+                f'avnav-poi: storage cap: removed {removed} old files, freed {freed_mb:.1f} MB')
 
     def _delete_image(self, url):
         if not url:

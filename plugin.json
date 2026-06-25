@@ -10,6 +10,7 @@
     {"name": "showTideStations","type": "BOOLEAN", "default": "true",  "description": "Show tide stations"},
     {"name": "mapboxToken",     "type": "STRING",  "default": "",      "description": "Mapbox token for guide areas (from noforeignland.com/map DevTools → Network → pbf)"},
     {"name": "cacheTTL",        "type": "NUMBER",  "default": "120",   "description": "Cache lifetime in minutes for community markers"},
-    {"name": "downloadRadius",  "type": "NUMBER",  "default": "20",    "description": "Download radius (km) for offline POIs + photos — 0 to disable"}
+    {"name": "downloadRadius",  "type": "NUMBER",  "default": "20",    "description": "Download radius (km) for offline POIs + photos — 0 to disable"},
+    {"name": "storageLimitMB",  "type": "NUMBER",  "default": "500",   "description": "Max storage for downloaded place details and photos in MB — 0 for unlimited. When full, oldest files are deleted first."}
   ]
 }
